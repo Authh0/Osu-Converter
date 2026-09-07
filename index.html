@@ -55,15 +55,15 @@
 <body>
 <div class="wrap">
   <h1>osu!mania → Encore Break</h1>
-  <p class="sub">Solta os <code>.osu</code> de uma música — um por instrumento — e sai o ModuleScript com todos os charts. Nada sai da sua máquina: a conversão roda na página.</p>
+  <p class="sub">Solta os <code>.osz</code> ou <code>.osu</code> de uma música — um por instrumento — e sai o ModuleScript com todos os charts. Nada sai da sua máquina: a conversão roda na página.</p>
 
   <div class="cols">
     <div class="panel">
       <h2>Charts</h2>
       <div id="drop" tabindex="0" role="button">
-        <b>Solta os .osu aqui</b><br>pode ser vários de uma vez
+        <b>Solta os .osz ou .osu aqui</b><br>pode ser vários de uma vez
       </div>
-      <input type="file" id="file" accept=".osu" multiple hidden>
+      <input type="file" id="file" accept=".osu,.osz,.zip" multiple hidden>
 
       <table id="list" hidden>
         <thead><tr><th>Arquivo</th><th>Instrumento</th><th>Notas</th><th></th></tr></thead>
@@ -124,6 +124,54 @@ const ALIASES = {guitar:"Guitar", gtr:"Guitar", bass:"Bass", drums:"Drums", drum
                  piano:"Piano", keyboard:"Piano", keys:"Piano"};
 let charts = [];
 let currentLua = "";
+
+// .osz é um ZIP. Lê o diretório central e extrai só os .osu, ignorando o
+// áudio e as imagens que vêm no pacote.
+async function readOsuFromZip(buffer){
+  const dv = new DataView(buffer), u8 = new Uint8Array(buffer);
+
+  // EOCD, procurado de trás para frente: o comentário final tem tamanho variável.
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= 0 && i >= u8.length - 65557; i--){
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error("não parece um ZIP válido");
+
+  const count = dv.getUint16(eocd + 10, true);
+  let ptr = dv.getUint32(eocd + 16, true);
+  const dec = new TextDecoder("utf-8");
+  const out = [];
+
+  for (let i = 0; i < count; i++){
+    if (dv.getUint32(ptr, true) !== 0x02014b50) break;
+    const method   = dv.getUint16(ptr + 10, true);
+    const compSize = dv.getUint32(ptr + 20, true);
+    const nameLen  = dv.getUint16(ptr + 28, true);
+    const extraLen = dv.getUint16(ptr + 30, true);
+    const cmtLen   = dv.getUint16(ptr + 32, true);
+    const localOff = dv.getUint32(ptr + 42, true);
+    const name = dec.decode(u8.subarray(ptr + 46, ptr + 46 + nameLen));
+    ptr += 46 + nameLen + extraLen + cmtLen;
+
+    if (!name.toLowerCase().endsWith(".osu")) continue;
+    if (dv.getUint32(localOff, true) !== 0x04034b50) continue;
+
+    // O cabeçalho local tem tamanhos próprios de nome e extra, que podem
+    // diferir dos do diretório central.
+    const dataStart = localOff + 30
+      + dv.getUint16(localOff + 26, true)
+      + dv.getUint16(localOff + 28, true);
+    const raw = u8.subarray(dataStart, dataStart + compSize);
+
+    if (method === 0){
+      out.push({name, text: dec.decode(raw)});
+    } else if (method === 8){
+      const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      out.push({name, text: dec.decode(await new Response(stream).arrayBuffer())});
+    }
+  }
+  return out;
+}
 
 function detectInstrument(fileName, version){
   const hay = ((version || "") + " " + fileName).toLowerCase();
@@ -309,30 +357,47 @@ return module
     `<span><b>${duration}s</b></span>`;
 }
 
-function addFiles(files){
-  let pending = files.length;
-  if (!pending) return;
-
-  for (const f of files){
-    const fr = new FileReader();
-    fr.onload = () => {
-      const r = parseOsu(fr.result, f.name);
-      if (r.error){
-        $("messages").insertAdjacentHTML("beforeend",
-          `<div class="msg err">${f.name}: ${r.error}</div>`);
-      } else {
-        charts.push({file: f.name, ...r});
-      }
-      if (--pending === 0){
-        if (!$("id").value && charts.length){
-          const t = charts[0].meta.Title || "";
-          $("id").value = t.replace(/[^A-Za-z0-9]/g,"") || "NovaMusica";
-        }
-        renderList(); build();
-      }
-    };
-    fr.readAsText(f);
+function acceptChart(text, name){
+  const r = parseOsu(text, name);
+  if (r.error){
+    $("messages").insertAdjacentHTML("beforeend", `<div class="msg err">${name}: ${r.error}</div>`);
+  } else {
+    charts.push({file: name, ...r});
   }
+}
+
+const readAsText = f => new Promise(res => {
+  const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsText(f);
+});
+const readAsBuffer = f => new Promise(res => {
+  const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsArrayBuffer(f);
+});
+
+async function addFiles(files){
+  for (const f of files){
+    const lower = f.name.toLowerCase();
+    if (lower.endsWith(".osz") || lower.endsWith(".zip")){
+      try {
+        const entries = await readOsuFromZip(await readAsBuffer(f));
+        if (!entries.length){
+          $("messages").insertAdjacentHTML("beforeend",
+            `<div class="msg err">${f.name}: nenhum .osu dentro do pacote.</div>`);
+        }
+        for (const e of entries) acceptChart(e.text, e.name);
+      } catch (err) {
+        $("messages").insertAdjacentHTML("beforeend",
+          `<div class="msg err">${f.name}: ${err.message}</div>`);
+      }
+    } else {
+      acceptChart(await readAsText(f), f.name);
+    }
+  }
+
+  if (!$("id").value && charts.length){
+    const t = charts[0].meta.Title || "";
+    $("id").value = t.replace(/[^A-Za-z0-9]/g,"") || "NovaMusica";
+  }
+  renderList(); build();
 }
 
 const drop = $("drop");
@@ -343,7 +408,7 @@ drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add(
 drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", e => {
   e.preventDefault(); drop.classList.remove("over");
-  addFiles([...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith(".osu")));
+  addFiles([...e.dataTransfer.files].filter(f => /\.(osu|osz|zip)$/i.test(f.name)));
 });
 
 for (const el of ["id","genre","travel","intensity","duration","offset"])
