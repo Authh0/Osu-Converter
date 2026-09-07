@@ -6,92 +6,74 @@
 <title>osu!mania → Encore Break</title>
 <style>
   :root{
-    --night:#0d1424;
-    --night-2:#141d33;
-    --edge:#243154;
-    --ink:#e8edfa;
-    --ink-dim:#8494b8;
-    --perfect:#00ffaa;
-    --good:#ffdd00;
-    --miss:#ff3c3c;
+    --night:#0d1424; --night-2:#141d33; --edge:#243154;
+    --ink:#e8edfa; --ink-dim:#8494b8;
+    --perfect:#00ffaa; --good:#ffdd00; --miss:#ff3c3c;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0;background:var(--night);color:var(--ink);
-    font:15px/1.55 var(--sans);
-    padding:28px 22px 60px;
-  }
-  .wrap{max-width:1180px;margin:0 auto}
-  h1{
-    font-size:26px;font-weight:650;letter-spacing:-.02em;margin:0 0 4px;
-  }
-  .sub{color:var(--ink-dim);margin:0 0 26px;max-width:62ch}
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
-  @media(max-width:860px){.cols{grid-template-columns:1fr}}
-  .panel{
-    background:var(--night-2);border:1px solid var(--edge);border-radius:10px;
-    padding:16px;
-  }
+  body{margin:0;background:var(--night);color:var(--ink);font:15px/1.55 var(--sans);padding:26px 20px 60px}
+  .wrap{max-width:1220px;margin:0 auto}
+  h1{font-size:25px;font-weight:650;letter-spacing:-.02em;margin:0 0 4px}
+  .sub{color:var(--ink-dim);margin:0 0 24px;max-width:64ch}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  .panel{background:var(--night-2);border:1px solid var(--edge);border-radius:10px;padding:16px}
   .panel h2{font-size:13px;font-weight:600;color:var(--ink-dim);margin:0 0 12px}
-  #drop{
-    border:1.5px dashed var(--edge);border-radius:8px;padding:26px 16px;
-    text-align:center;color:var(--ink-dim);cursor:pointer;
-    transition:border-color .15s,color .15s;
-  }
+  #drop{border:1.5px dashed var(--edge);border-radius:8px;padding:24px 16px;text-align:center;
+    color:var(--ink-dim);cursor:pointer;transition:border-color .15s,color .15s}
   #drop:hover,#drop.over{border-color:var(--perfect);color:var(--ink)}
   #drop b{color:var(--ink);font-weight:600}
-  textarea{
-    width:100%;height:190px;margin-top:12px;resize:vertical;
-    background:var(--night);color:var(--ink);border:1px solid var(--edge);
-    border-radius:8px;padding:10px;font:12.5px/1.5 var(--mono);
-  }
-  textarea:focus,button:focus-visible{outline:2px solid var(--perfect);outline-offset:2px}
-  .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+  th{text-align:left;font-weight:600;color:var(--ink-dim);font-size:11.5px;padding:0 6px 6px 0}
+  td{padding:5px 6px 5px 0;border-top:1px solid var(--edge);vertical-align:middle}
+  td.name{font:12px var(--mono);color:var(--ink-dim);max-width:200px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
   label{display:block;font-size:12px;color:var(--ink-dim);margin-bottom:4px}
-  input,select{
-    width:100%;background:var(--night);color:var(--ink);
-    border:1px solid var(--edge);border-radius:6px;padding:7px 9px;
-    font:13px var(--sans);
-  }
-  pre{
-    margin:0;background:var(--night);border:1px solid var(--edge);border-radius:8px;
-    padding:12px;font:12.5px/1.6 var(--mono);overflow:auto;max-height:520px;
-    white-space:pre;color:var(--ink);
-  }
-  button{
-    background:var(--perfect);color:#06281d;border:0;border-radius:7px;
-    padding:9px 15px;font:600 13px var(--sans);cursor:pointer;
-  }
+  input,select{width:100%;background:var(--night);color:var(--ink);border:1px solid var(--edge);
+    border-radius:6px;padding:7px 9px;font:13px var(--sans)}
+  td select{padding:4px 6px;font-size:12.5px}
+  input:focus-visible,select:focus-visible,button:focus-visible,#drop:focus-visible{
+    outline:2px solid var(--perfect);outline-offset:2px}
+  pre{margin:0;background:var(--night);border:1px solid var(--edge);border-radius:8px;padding:12px;
+    font:12.5px/1.6 var(--mono);overflow:auto;max-height:560px;white-space:pre}
+  button{background:var(--perfect);color:#06281d;border:0;border-radius:7px;padding:9px 15px;
+    font:600 13px var(--sans);cursor:pointer}
+  button.ghost{background:transparent;color:var(--ink-dim);border:1px solid var(--edge)}
   button:disabled{background:var(--edge);color:var(--ink-dim);cursor:not-allowed}
   .bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-  .stats{display:flex;gap:18px;flex-wrap:wrap;font:12.5px var(--mono);color:var(--ink-dim);margin-bottom:12px}
+  .stats{display:flex;gap:16px;flex-wrap:wrap;font:12.5px var(--mono);color:var(--ink-dim)}
   .stats b{color:var(--ink);font-weight:600}
   .msg{border-radius:7px;padding:9px 11px;margin-bottom:10px;font-size:13px;border:1px solid}
   .warn{border-color:var(--good);color:var(--good);background:rgba(255,221,0,.07)}
   .err{border-color:var(--miss);color:var(--miss);background:rgba(255,60,60,.07)}
-  .empty{color:var(--ink-dim);font:13px var(--mono);padding:22px 0;text-align:center}
+  .empty{color:var(--ink-dim);font:13px var(--mono);padding:22px 0;text-align:center;display:block}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>osu!mania → Encore Break</h1>
-  <p class="sub">Solta o arquivo <code>.osu</code> da dificuldade e sai o ModuleScript pronto para colar em <code>ReplicatedStorage.Maps</code>. Nada é enviado para lugar nenhum — a conversão roda aqui na página.</p>
+  <p class="sub">Solta os <code>.osu</code> de uma música — um por instrumento — e sai o ModuleScript com todos os charts. Nada sai da sua máquina: a conversão roda na página.</p>
 
   <div class="cols">
     <div class="panel">
-      <h2>Entrada</h2>
+      <h2>Charts</h2>
       <div id="drop" tabindex="0" role="button">
-        <b>Solta o .osu aqui</b><br>ou clica para escolher
+        <b>Solta os .osu aqui</b><br>pode ser vários de uma vez
       </div>
-      <input type="file" id="file" accept=".osu" hidden>
-      <textarea id="raw" placeholder="…ou cola o conteúdo do .osu"></textarea>
+      <input type="file" id="file" accept=".osu" multiple hidden>
+
+      <table id="list" hidden>
+        <thead><tr><th>Arquivo</th><th>Instrumento</th><th>Notas</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
 
       <div class="fields">
         <div>
           <label for="id">Nome do ModuleScript</label>
-          <input id="id" placeholder="MusicTest3">
+          <input id="id" placeholder="PerfectPair">
         </div>
         <div>
           <label for="genre">Gênero</label>
@@ -110,6 +92,14 @@
             <option>Normal</option><option>Calm</option><option>Heavy</option>
           </select>
         </div>
+        <div>
+          <label for="duration">Duração (s)</label>
+          <input id="duration" type="number" placeholder="vazio = estimar">
+        </div>
+        <div>
+          <label for="offset">offset (ms)</label>
+          <input id="offset" type="number" value="0">
+        </div>
       </div>
     </div>
 
@@ -118,6 +108,7 @@
       <div id="messages"></div>
       <div class="bar">
         <button id="copy" disabled>Copiar</button>
+        <button id="clear" class="ghost">Limpar</button>
         <span class="stats" id="stats"></span>
       </div>
       <pre id="out"><span class="empty">O ModuleScript aparece aqui</span></pre>
@@ -127,92 +118,162 @@
 
 <script>
 const $ = id => document.getElementById(id);
+const INSTRUMENTS = ["Guitar","Bass","Drums","Piano"];
+// Keyboard é como esses packs costumam chamar o piano.
+const ALIASES = {guitar:"Guitar", gtr:"Guitar", bass:"Bass", drums:"Drums", drum:"Drums",
+                 piano:"Piano", keyboard:"Piano", keys:"Piano"};
+let charts = [];
 let currentLua = "";
 
-function parseOsu(text){
-  const errors = [], warnings = [];
-  const lines = text.split(/\r?\n/);
-  let section = "", cs = null, mode = null;
-  const meta = {};
-  const objects = [];
+function detectInstrument(fileName, version){
+  const hay = ((version || "") + " " + fileName).toLowerCase();
+  for (const [needle, inst] of Object.entries(ALIASES))
+    if (hay.includes(needle)) return inst;
+  return null;
+}
 
-  for (const line of lines){
+function parseOsu(text, fileName){
+  const warnings = [];
+  let section = "", cs = null, mode = null;
+  const meta = {}, objects = [];
+
+  for (const line of text.split(/\r?\n/)){
     const t = line.trim();
     if (!t || t.startsWith("//")) continue;
     if (t.startsWith("[") && t.endsWith("]")){ section = t.slice(1,-1); continue; }
 
     if (section === "General" || section === "Metadata" || section === "Difficulty"){
-      const i = t.indexOf(":");
-      if (i < 0) continue;
-      const key = t.slice(0,i).trim(), val = t.slice(i+1).trim();
-      if (key === "Mode") mode = parseInt(val,10);
-      else if (key === "CircleSize") cs = parseFloat(val);
-      else meta[key] = val;
+      const i = t.indexOf(":"); if (i < 0) continue;
+      const k = t.slice(0,i).trim(), v = t.slice(i+1).trim();
+      if (k === "Mode") mode = parseInt(v,10);
+      else if (k === "CircleSize") cs = parseFloat(v);
+      else meta[k] = v;
     } else if (section === "HitObjects"){
       const p = t.split(",");
       if (p.length < 4) continue;
-      const x = parseInt(p[0],10);
-      const time = parseInt(p[2],10);
-      const type = parseInt(p[3],10);
-      if (!Number.isFinite(x) || !Number.isFinite(time) || !Number.isFinite(type)) continue;
-      if (type & 8) continue;                    // spinner: não existe aqui
+      const x = parseInt(p[0],10), time = parseInt(p[2],10), type = parseInt(p[3],10);
+      if (![x,time,type].every(Number.isFinite)) continue;
+      if (type & 8) continue;                      // spinner não existe aqui
       let endTime = null;
-      if (type & 128){                           // hold do mania
-        const extra = (p[5] || "").split(":")[0];
-        const e = parseInt(extra,10);
+      if (type & 128){                             // hold do mania
+        const e = parseInt((p[5] || "").split(":")[0], 10);
         if (Number.isFinite(e)) endTime = e;
       }
       objects.push({x, time, endTime});
     }
   }
 
-  if (mode !== null && mode !== 3)
-    errors.push("Este .osu não é osu!mania (Mode: " + mode + "). Só o modo mania vira lanes.");
-  if (!objects.length)
-    errors.push("Nenhuma nota encontrada na seção [HitObjects].");
+  if (mode !== null && mode !== 3) return {error: "não é osu!mania (Mode: " + mode + ")"};
+  if (!objects.length) return {error: "sem notas em [HitObjects]"};
 
   const keyCount = Math.round(cs || 4);
-  if (keyCount !== 4 && keyCount !== 5)
-    errors.push("O mapa tem " + keyCount + " colunas. O Encore Break só suporta 4K e 5K.");
+  if (keyCount !== 4 && keyCount !== 5) return {error: keyCount + " colunas — só 4K e 5K"};
 
-  if (errors.length) return {errors, warnings};
-
-  // Coluna = floor(x * colunas / 512), base 0. As lanes do jogo são base 1.
   const notes = [];
   let holds = 0, clamped = 0;
   for (const o of objects){
     let col = Math.floor(o.x * keyCount / 512);
-    if (col < 0 || col > keyCount - 1){ clamped++; col = Math.min(Math.max(col,0), keyCount-1); }
-    const note = {ms: o.time, lane: col + 1};
-    if (o.endTime !== null){
-      const dur = o.endTime - o.time;
-      if (dur > 0){ note.hold = dur; holds++; }
-    }
-    notes.push(note);
+    if (col < 0 || col > keyCount-1){ clamped++; col = Math.min(Math.max(col,0), keyCount-1); }
+    const n = {ms: o.time, lane: col + 1};
+    if (o.endTime !== null && o.endTime - o.time > 0){ n.hold = o.endTime - o.time; holds++; }
+    notes.push(n);
   }
+  notes.sort((a,b) => a.ms - b.ms);   // o motor avança um índice, a ordem é obrigatória
 
-  notes.sort((a,b) => a.ms - b.ms);   // o motor avança um índice, então a ordem é obrigatória
-  if (clamped) warnings.push(clamped + " nota(s) tinham coluna fora da faixa e foram encaixadas na borda.");
-  if (notes[0].ms < 0) warnings.push("Há nota com tempo negativo. Confere o offset do áudio no osu!.");
+  if (clamped) warnings.push(clamped + " nota(s) com coluna fora da faixa, encaixadas na borda.");
+  if (notes[0].ms < 0) warnings.push("nota com tempo negativo — confere o offset no osu!.");
 
   const last = notes[notes.length-1];
-  const duration = (last.hold ? last.ms + last.hold : last.ms) / 1000;
-
-  return {errors, warnings, notes, keyCount, holds, duration, meta};
+  return {notes, keyCount, holds, meta, warnings,
+          lastMs: last.hold ? last.ms + last.hold : last.ms,
+          instrument: detectInstrument(fileName, meta.Version)};
 }
 
-function buildLua(r){
+function renderList(){
+  const table = $("list"), body = table.querySelector("tbody");
+  table.hidden = charts.length === 0;
+  body.innerHTML = "";
+
+  charts.forEach((c, i) => {
+    const tr = document.createElement("tr");
+
+    const name = document.createElement("td");
+    name.className = "name"; name.textContent = c.file; name.title = c.file;
+
+    const pick = document.createElement("td");
+    const sel = document.createElement("select");
+    sel.innerHTML = '<option value="">— escolher —</option>' +
+      INSTRUMENTS.map(n => `<option${n === c.instrument ? " selected" : ""}>${n}</option>`).join("");
+    sel.addEventListener("change", () => { charts[i].instrument = sel.value || null; build(); });
+    pick.appendChild(sel);
+
+    const count = document.createElement("td");
+    count.textContent = c.notes.length + (c.holds ? ` (${c.holds}h)` : "");
+
+    const del = document.createElement("td");
+    const b = document.createElement("button");
+    b.className = "ghost"; b.textContent = "×"; b.style.padding = "2px 9px";
+    b.addEventListener("click", () => { charts.splice(i,1); renderList(); build(); });
+    del.appendChild(b);
+
+    tr.append(name, pick, count, del);
+    body.appendChild(tr);
+  });
+}
+
+function build(){
+  const msgs = $("messages"), out = $("out"), stats = $("stats");
+  msgs.innerHTML = ""; stats.textContent = "";
+
+  if (!charts.length){
+    out.innerHTML = '<span class="empty">O ModuleScript aparece aqui</span>';
+    $("copy").disabled = true; currentLua = ""; return;
+  }
+
+  const errors = [], warns = [], byInstrument = {};
+
+  for (const c of charts){
+    for (const w of c.warnings) warns.push(`${c.file}: ${w}`);
+    if (!c.instrument){ errors.push(`${c.file}: escolha o instrumento.`); continue; }
+    if (byInstrument[c.instrument]) errors.push(`Dois charts marcados como ${c.instrument}.`);
+    byInstrument[c.instrument] = c;
+  }
+
+  const used = Object.values(byInstrument);
+  const keyCounts = [...new Set(used.map(c => c.keyCount))];
+  if (keyCounts.length > 1)
+    errors.push("Charts com contagens de lane diferentes (" + keyCounts.join(", ") + "K).");
+
+  const faltando = INSTRUMENTS.filter(n => !byInstrument[n]);
+  if (faltando.length && !errors.length)
+    warns.push("Sem chart para " + faltando.join(", ") + ". Quem pegar esses herda o primeiro chart disponível.");
+
+  for (const e of errors) msgs.insertAdjacentHTML("beforeend", `<div class="msg err">${e}</div>`);
+  for (const w of warns)  msgs.insertAdjacentHTML("beforeend", `<div class="msg warn">${w}</div>`);
+
+  if (errors.length || !used.length){
+    out.innerHTML = '<span class="empty">Corrige o que está acima para gerar</span>';
+    $("copy").disabled = true; currentLua = ""; return;
+  }
+
   const id = $("id").value.trim() || "NovaMusica";
-  const title = (r.meta.Title || id).replace(/"/g,'\\"');
-  const artist = (r.meta.Artist || "").replace(/"/g,'\\"');
+  const first = used[0];
+  const title = (first.meta.Title || id).replace(/"/g,'\\"');
+  const artist = (first.meta.Artist || "").replace(/"/g,'\\"');
+  const lastMs = Math.max(...used.map(c => c.lastMs));
+  const duration = parseInt($("duration").value,10) || Math.ceil(lastMs/1000 + 5);
 
-  const body = r.notes.map(n =>
-    n.hold ? `\t{${n.ms}, ${n.lane}, ${n.hold}};`
-           : `\t{${n.ms}, ${n.lane}};`
-  ).join("\n");
+  const stemLines = INSTRUMENTS.map(n => `\t${(n + "     ").slice(0,6)} = "",`).join("\n");
 
-  return `-- ${id} (ModuleScript) -- ReplicatedStorage.Maps.${id}
--- Convertido de ${r.meta.Version ? '"' + r.meta.Version + '"' : "um .osu"} (osu!mania ${r.keyCount}K)
+  const chartBlocks = INSTRUMENTS.filter(n => byInstrument[n]).map(n => {
+    const body = byInstrument[n].notes.map(x =>
+      x.hold ? `\t\t{${x.ms}, ${x.lane}, ${x.hold}};` : `\t\t{${x.ms}, ${x.lane}};`
+    ).join("\n");
+    return `\t${n} = {\n${body}\n\t},`;
+  }).join("\n\n");
+
+  currentLua = `-- ${id} (ModuleScript) -- ReplicatedStorage.Maps.${id}
+-- Convertido de ${used.length} chart(s) osu!mania ${first.keyCount}K
 
 local module = {}
 
@@ -221,80 +282,74 @@ module.artist = "${artist}"
 module.genre = "${$("genre").value}"
 module.difficulty = 1
 
-module.offset = 0
+module.offset = ${parseInt($("offset").value,10) || 0}
 module.travelTime = ${parseInt($("travel").value,10) || 1500}
-module.keyCount = ${r.keyCount}
+module.keyCount = ${first.keyCount}
 module.intensity = "${$("intensity").value}"
+module.duration = ${duration}
 
-module.backingTrack = "rbxassetid://0000000000"
+module.backingTrack = ""
 module.stems = {
-\tGuitar = "",
-\tBass   = "",
-\tDrums  = "",
-\tPiano  = "",
+${stemLines}
 }
 
-module.notes = {
-${body}
+module.charts = {
+${chartBlocks}
 }
 
 return module
 `;
-}
 
-function render(text){
-  const msgs = $("messages"), out = $("out"), stats = $("stats");
-  msgs.innerHTML = ""; stats.textContent = "";
-
-  if (!text.trim()){
-    out.innerHTML = '<span class="empty">O ModuleScript aparece aqui</span>';
-    $("copy").disabled = true; currentLua = ""; return;
-  }
-
-  const r = parseOsu(text);
-  for (const e of r.errors)   msgs.insertAdjacentHTML("beforeend", `<div class="msg err">${e}</div>`);
-  for (const w of r.warnings) msgs.insertAdjacentHTML("beforeend", `<div class="msg warn">${w}</div>`);
-
-  if (r.errors.length){
-    out.innerHTML = '<span class="empty">Corrige o que está acima para gerar</span>';
-    $("copy").disabled = true; currentLua = ""; return;
-  }
-
-  currentLua = buildLua(r);
   out.textContent = currentLua;
   $("copy").disabled = false;
   stats.innerHTML =
-    `<span><b>${r.notes.length}</b> notas</span>` +
-    `<span><b>${r.holds}</b> holds</span>` +
-    `<span><b>${r.keyCount}K</b></span>` +
-    `<span><b>${r.duration.toFixed(1)}s</b></span>`;
+    `<span><b>${used.length}</b> charts</span>` +
+    `<span><b>${used.reduce((s,c) => s + c.notes.length, 0)}</b> notas</span>` +
+    `<span><b>${first.keyCount}K</b></span>` +
+    `<span><b>${duration}s</b></span>`;
 }
 
-const raw = $("raw");
-raw.addEventListener("input", () => render(raw.value));
-for (const el of ["id","genre","travel","intensity"])
-  $(el).addEventListener("input", () => render(raw.value));
+function addFiles(files){
+  let pending = files.length;
+  if (!pending) return;
 
-function readFile(f){
-  const fr = new FileReader();
-  fr.onload = () => {
-    raw.value = fr.result;
-    if (!$("id").value) $("id").value = f.name.replace(/\.osu$/i,"").replace(/[^A-Za-z0-9_]/g,"");
-    render(raw.value);
-  };
-  fr.readAsText(f);
+  for (const f of files){
+    const fr = new FileReader();
+    fr.onload = () => {
+      const r = parseOsu(fr.result, f.name);
+      if (r.error){
+        $("messages").insertAdjacentHTML("beforeend",
+          `<div class="msg err">${f.name}: ${r.error}</div>`);
+      } else {
+        charts.push({file: f.name, ...r});
+      }
+      if (--pending === 0){
+        if (!$("id").value && charts.length){
+          const t = charts[0].meta.Title || "";
+          $("id").value = t.replace(/[^A-Za-z0-9]/g,"") || "NovaMusica";
+        }
+        renderList(); build();
+      }
+    };
+    fr.readAsText(f);
+  }
 }
 
 const drop = $("drop");
 drop.addEventListener("click", () => $("file").click());
 drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") $("file").click(); });
-$("file").addEventListener("change", e => e.target.files[0] && readFile(e.target.files[0]));
+$("file").addEventListener("change", e => addFiles([...e.target.files]));
 drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
 drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", e => {
   e.preventDefault(); drop.classList.remove("over");
-  if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+  addFiles([...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith(".osu")));
 });
+
+for (const el of ["id","genre","travel","intensity","duration","offset"])
+  $(el).addEventListener("input", build);
+
+$("clear").addEventListener("click", () => { charts = []; $("file").value = ""; renderList(); build(); });
 
 $("copy").addEventListener("click", async () => {
   await navigator.clipboard.writeText(currentLua);
