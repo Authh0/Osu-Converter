@@ -64,9 +64,12 @@
         <b>Solta os .osz ou .osu aqui</b><br>pode ser vários de uma vez
       </div>
       <input type="file" id="file" accept=".osu,.osz,.zip" multiple hidden>
+      <div class="bar" style="margin:12px 0 0">
+        <button id="add" class="ghost">+ Adicionar arquivos</button>
+      </div>
 
       <table id="list" hidden>
-        <thead><tr><th>Arquivo</th><th>Instrumento</th><th>Notas</th><th></th></tr></thead>
+        <thead><tr><th>Arquivo</th><th>Difficulty</th><th>Instrumento</th><th>Notas</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
 
@@ -123,6 +126,7 @@ const INSTRUMENTS = ["Guitar","Bass","Drums","Piano"];
 const ALIASES = {guitar:"Guitar", gtr:"Guitar", bass:"Bass", drums:"Drums", drum:"Drums",
                  piano:"Piano", keyboard:"Piano", keys:"Piano"};
 let charts = [];
+let loadErrors = [];   // erros de leitura ficam até você limpar; build() reescreve a área
 let currentLua = "";
 
 // .osz é um ZIP. Lê o diretório central e extrai só os .osu, ignorando o
@@ -211,11 +215,14 @@ function parseOsu(text, fileName){
     }
   }
 
-  if (mode !== null && mode !== 3) return {error: "não é osu!mania (Mode: " + mode + ")"};
-  if (!objects.length) return {error: "sem notas em [HitObjects]"};
+  if (mode !== null && mode !== 3)
+    return {error: `não é osu!mania (Mode: ${mode}; mania é 3)`};
+  if (!objects.length)
+    return {error: "nenhuma nota em [HitObjects]"};
 
   const keyCount = Math.round(cs || 4);
-  if (keyCount !== 4 && keyCount !== 5) return {error: keyCount + " colunas — só 4K e 5K"};
+  if (keyCount !== 4 && keyCount !== 5)
+    return {error: `CircleSize ${cs} = ${keyCount} lanes. O jogo só tem 4K e 5K.`};
 
   const notes = [];
   let holds = 0, clamped = 0;
@@ -248,23 +255,35 @@ function renderList(){
     const name = document.createElement("td");
     name.className = "name"; name.textContent = c.file; name.title = c.file;
 
+    // O campo Version do próprio .osu é a fonte confiável de qual instrumento
+    // é o chart. Fica visível para você conferir a detecção sem abrir o arquivo.
+    const ver = document.createElement("td");
+    ver.className = "name";
+    ver.textContent = c.meta.Version || "—";
+    ver.title = ver.textContent;
+
     const pick = document.createElement("td");
     const sel = document.createElement("select");
     sel.innerHTML = '<option value="">— escolher —</option>' +
       INSTRUMENTS.map(n => `<option${n === c.instrument ? " selected" : ""}>${n}</option>`).join("");
-    sel.addEventListener("change", () => { charts[i].instrument = sel.value || null; build(); });
+    if (!c.instrument) sel.style.borderColor = "var(--miss)";
+    sel.addEventListener("change", () => {
+      charts[i].instrument = sel.value || null;
+      renderList(); build();
+    });
     pick.appendChild(sel);
 
     const count = document.createElement("td");
-    count.textContent = c.notes.length + (c.holds ? ` (${c.holds}h)` : "");
+    count.textContent = `${c.notes.length}${c.holds ? ` (${c.holds}h)` : ""} · ${c.keyCount}K`;
 
     const del = document.createElement("td");
     const b = document.createElement("button");
     b.className = "ghost"; b.textContent = "×"; b.style.padding = "2px 9px";
+    b.title = "remover da lista";
     b.addEventListener("click", () => { charts.splice(i,1); renderList(); build(); });
     del.appendChild(b);
 
-    tr.append(name, pick, count, del);
+    tr.append(name, ver, pick, count, del);
     body.appendChild(tr);
   });
 }
@@ -273,12 +292,12 @@ function build(){
   const msgs = $("messages"), out = $("out"), stats = $("stats");
   msgs.innerHTML = ""; stats.textContent = "";
 
-  if (!charts.length){
+  if (!charts.length && !loadErrors.length){
     out.innerHTML = '<span class="empty">O ModuleScript aparece aqui</span>';
     $("copy").disabled = true; currentLua = ""; return;
   }
 
-  const errors = [], warns = [], byInstrument = {};
+  const errors = [...loadErrors], warns = [], byInstrument = {};
 
   for (const c of charts){
     for (const w of c.warnings) warns.push(`${c.file}: ${w}`);
@@ -358,12 +377,13 @@ return module
 }
 
 function acceptChart(text, name){
-  const r = parseOsu(text, name);
-  if (r.error){
-    $("messages").insertAdjacentHTML("beforeend", `<div class="msg err">${name}: ${r.error}</div>`);
-  } else {
-    charts.push({file: name, ...r});
+  if (charts.some(c => c.file === name)){
+    loadErrors.push(`${name}: já está na lista, ignorado.`);
+    return;
   }
+  const r = parseOsu(text, name);
+  if (r.error) loadErrors.push(`${name}: ${r.error}`);
+  else charts.push({file: name, ...r});
 }
 
 const readAsText = f => new Promise(res => {
@@ -379,14 +399,10 @@ async function addFiles(files){
     if (lower.endsWith(".osz") || lower.endsWith(".zip")){
       try {
         const entries = await readOsuFromZip(await readAsBuffer(f));
-        if (!entries.length){
-          $("messages").insertAdjacentHTML("beforeend",
-            `<div class="msg err">${f.name}: nenhum .osu dentro do pacote.</div>`);
-        }
+        if (!entries.length) loadErrors.push(`${f.name}: nenhum .osu dentro do pacote.`);
         for (const e of entries) acceptChart(e.text, e.name);
       } catch (err) {
-        $("messages").insertAdjacentHTML("beforeend",
-          `<div class="msg err">${f.name}: ${err.message}</div>`);
+        loadErrors.push(`${f.name}: ${err.message}`);
       }
     } else {
       acceptChart(await readAsText(f), f.name);
@@ -403,7 +419,10 @@ async function addFiles(files){
 const drop = $("drop");
 drop.addEventListener("click", () => $("file").click());
 drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") $("file").click(); });
-$("file").addEventListener("change", e => addFiles([...e.target.files]));
+$("file").addEventListener("change", e => {
+  addFiles([...e.target.files]);
+  e.target.value = "";   // senão escolher o mesmo arquivo de novo não dispara change
+});
 drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
 drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", e => {
@@ -414,7 +433,12 @@ drop.addEventListener("drop", e => {
 for (const el of ["id","genre","travel","intensity","duration","offset"])
   $(el).addEventListener("input", build);
 
-$("clear").addEventListener("click", () => { charts = []; $("file").value = ""; renderList(); build(); });
+$("clear").addEventListener("click", () => {
+  charts = []; loadErrors = []; $("file").value = "";
+  renderList(); build();
+});
+
+$("add").addEventListener("click", () => $("file").click());
 
 $("copy").addEventListener("click", async () => {
   await navigator.clipboard.writeText(currentLua);
